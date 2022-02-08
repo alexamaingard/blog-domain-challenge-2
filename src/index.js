@@ -14,6 +14,9 @@ app.use(express.json());
 const userRouter = require('./routers/user');
 app.use('/user', userRouter);
 
+const postRouter = require('./routers/post');
+app.use('/post', postRouter);
+
 app.get('*', (req, res) => {
     res.json({ ok: true });
 });
