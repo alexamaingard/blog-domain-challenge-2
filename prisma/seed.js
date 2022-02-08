@@ -68,7 +68,7 @@ const createPost = async (user, categories) => {
     for(let i = 0; i < postTitles.length; i++){
         const createdPost = await prisma.post.create({
             data: {
-                title: 'Test Post',
+                title: postTitles[i],
                 content: 'This is a test post',
                 imageUrl: 'http://fake_link_post',
                 publishedAt: new Date('2022-02-08T11:08'),
@@ -78,13 +78,15 @@ const createPost = async (user, categories) => {
                     }
                 },
                 categories: {
-                    create: {
-                        category: {
-                            connect: {
-                                id: categories[i].id
+                    create: [
+                        {
+                            category: {
+                                connect: {
+                                    id: categories[i].id
+                                }
                             }
                         }
-                    }
+                    ]
                 }
             }
         });
