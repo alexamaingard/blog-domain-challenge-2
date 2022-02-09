@@ -39,7 +39,7 @@ model Post {
   title       String    @unique
   content     String
   imageUrl    String
-  publishedAt DateTime
+  publishedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
