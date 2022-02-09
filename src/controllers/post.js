@@ -43,6 +43,58 @@ const createPost = async (req, res) => {
     res.json({ data: createdPost });
 }
 
+const createComment = async (req) => {
+    const { content, parentId, userId, postId } = req.body;
+
+    let commentData = {
+        content: content
+    };
+    let parentComment;
+
+    if(parentId){
+        commentData = {
+            ...commentData, 
+            parentId: parentId
+        };
+        parentComment = await prisma.comment.findUnique({
+            where: {
+                id: parentId
+            }
+        });
+        console.log("Parent Comment:", parentComment);
+    }
+
+    const createdComment = await prisma.comment.create({
+        data: {
+            ...commentData,
+            user: {
+                connect: {
+                    id: userId
+                }
+            },
+            post: {
+                connect: {
+                    id: postId
+                }
+            }
+        }
+    });
+    console.log("Created Comment:", createdComment);
+
+    return { 
+        createdComment: createdComment, 
+        parentComment: parentComment? parentComment : null
+    };
+}
+
+const addCommentToPost = async (req, res) => {
+    console.log("Req body:", req.body);
+    const comment = await createComment(req);
+    
+    res.json({ data: comment });
+}
+
 module.exports = {
-    createPost
+    createPost,
+    addCommentToPost
 }
