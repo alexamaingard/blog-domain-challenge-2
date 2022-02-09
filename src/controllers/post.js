@@ -94,7 +94,35 @@ const addCommentToPost = async (req, res) => {
     res.json({ data: comment });
 }
 
+const getPosts = async (req, res) => {
+    console.log("Query:", req.query);
+    let queryFilters = {};
+    if(req.query.limit){
+        queryFilters = {
+            ...queryFilters,
+            take: parseInt(req.query.limit)
+        }
+    }
+    if(req.query.order){
+        const order = req.query.order === "recent" ? 'desc' : 'asc'; 
+        queryFilters = {
+            ...queryFilters,
+            orderBy: {
+                id: order
+            }
+        }
+    }
+
+    const posts = await prisma.post.findMany({
+
+    });
+    console.log("Posts:", posts);
+
+    res.json({ data: posts });
+}
+
 module.exports = {
     createPost,
-    addCommentToPost
+    addCommentToPost,
+    getPosts
 }
