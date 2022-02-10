@@ -24,6 +24,6 @@ router.get("/username=:username", getPosts);
 
 router.patch("/:id", updatePost);
 router.patch("/comment/:id", updateComment);
-router.patch("/category/:id", updateComment);
+router.patch("/category/:id", updateCategory);
 
 module.exports = router;
