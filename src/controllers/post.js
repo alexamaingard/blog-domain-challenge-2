@@ -96,7 +96,7 @@ const createComment = async (req) => {
                 parentComment: parentComment? parentComment : null
             };
         }
-        throw "Comment couldn't be created.";
+        throw "Couldn't create comment.";
     }
     catch(error){
         console.log(error);
@@ -112,7 +112,7 @@ const addCommentToPost = async (req, res) => {
         if(comment){
             return res.json({ data: comment });
         }
-        throw "Comment couldn't be added to post.";
+        throw "Couldn't add comment to post.";
     }
     catch(error){
         console.log(error);
@@ -191,36 +191,72 @@ const updateComment = async (req, res) => {
     const { content } = req.body;
     const id = parseInt(req.params.id);
 
-    try{
-        const commentToUpdate = await prisma.comment.findUnique({
-            where: {
-                id: id
-            }
-        });
-        console.log("Comment to update:", commentToUpdate);
+    const updateConditions = {
+        where: {
+            id: id
+        }
+    }
 
-        if(commentToUpdate){
+    const commentToUpdate = await prisma.comment.findUnique({
+        ...updateConditions
+    });
+    console.log("Comment to update:", commentToUpdate);
+
+    if(commentToUpdate){
+        try{
             const updatedComment = await prisma.comment.update({
-                where: {
-                    id: id
-                },
+                ...updateConditions,
                 data: {
                     content: content
                 }
             });
             console.log("Updated comment:", updatedComment);
-
-            return res.json({ data: updatedComment });
+    
+            if(updatedComment){
+                return res.json({ data: updatedComment });  
+            }
+            throw "Comment to update not found.";
         }
-        throw "Comment to update not found.";
-    }
-    catch(error){
-        console.log(error);
+        catch(error){
+            console.log(error);
+        }
     }
 }
 
 const updateCategory = async (req, res) => {
+    console.log("Category id:", req.params.id);
+    const { name } = req.body;
+    const id = parseInt(req.params.id);
+    const updateConditions = {
+        where: {
+            id: id
+        }
+    }
 
+    const categoryToUpdate = await prisma.category.findUnique({
+        ...updateConditions
+    });
+    console.log("Category to update:", categoryToUpdate);
+    
+    if(categoryToUpdate){
+        try{
+            const updatedCategory = await prisma.category.update({
+                ...updateConditions,
+                data: {
+                    name: name
+                }
+            });
+            console.log("Updated category:", updatedCategory);
+
+            if(updatedCategory){
+                return res.json({ data: updatedCategory });
+            }
+            throw "Category to update not found.";
+        }
+        catch(error){
+            console.log(error);
+        }
+    }
 }
 
 module.exports = {
