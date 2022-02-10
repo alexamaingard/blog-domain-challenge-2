@@ -182,8 +182,52 @@ const getPosts = async (req, res) => {
     }
 }
 
+const updatePost = async (req, res) => {
+
+}
+
+const updateComment = async (req, res) => {
+    console.log("Comment id:", req.params.id);
+    const { content } = req.body;
+    const id = parseInt(req.params.id);
+
+    try{
+        const commentToUpdate = await prisma.comment.findUnique({
+            where: {
+                id: id
+            }
+        });
+        console.log("Comment to update:", commentToUpdate);
+
+        if(commentToUpdate){
+            const updatedComment = await prisma.comment.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    content: content
+                }
+            });
+            console.log("Updated comment:", updatedComment);
+
+            return res.json({ data: updatedComment });
+        }
+        throw "Comment to update not found.";
+    }
+    catch(error){
+        console.log(error);
+    }
+}
+
+const updateCategory = async (req, res) => {
+
+}
+
 module.exports = {
     createPost,
     addCommentToPost,
-    getPosts
+    getPosts,
+    updatePost,
+    updateComment,
+    updateCategory
 }
