@@ -5,42 +5,50 @@ const createPost = async (req, res) => {
     console.log("Req body", req.body);
     const { title, content, imageUrl, publishedAt, userId, categories } = req.body;
 
-    const createdPost = await prisma.post.create({
-        data: {
-            title: title,
-            content: content,
-            imageUrl: imageUrl,
-            user: {
-                connect: {
-                    id: userId
-                }
-            },
-            categories: {
-                create: categories.map((category) => {
-                    return {
-                        category: {
-                            connectOrCreate: {
-                                where: { name: category.name },
-                                create: { name: category.name }
+    try {
+        const createdPost = await prisma.post.create({
+            data: {
+                title: title,
+                content: content,
+                imageUrl: imageUrl,
+                user: {
+                    connect: {
+                        id: userId
+                    }
+                },
+                categories: {
+                    create: categories.map((category) => {
+                        return {
+                            category: {
+                                connectOrCreate: {
+                                    where: { name: category.name },
+                                    create: { name: category.name }
+                                }
                             }
                         }
-                    }
-                })
-            }
-        },
-        include: {
-            user: true,
-            user: {
-                include: {
-                    profile: true
+                    })
                 }
             },
-            categories: true
-        }
-    });
-    console.log("Created Post:", createdPost);
+            include: {
+                user: true,
+                user: {
+                    include: {
+                        profile: true
+                    }
+                },
+                categories: true
+            }
+        });
+        console.log("Created Post:", createdPost);
 
-    res.json({ data: createdPost });
+        if(createdPost){
+            return res.json({ data: createdPost });
+        }
+        throw "Couldn't create post.";
+    }
+    catch(error){
+        console.log(error);
+    }
 }
 
 const createComment = async (req) => {
@@ -64,34 +72,51 @@ const createComment = async (req) => {
         console.log("Parent Comment:", parentComment);
     }
 
-    const createdComment = await prisma.comment.create({
-        data: {
-            ...commentData,
-            user: {
-                connect: {
-                    id: userId
-                }
-            },
-            post: {
-                connect: {
-                    id: postId
+    try{
+        const createdComment = await prisma.comment.create({
+            data: {
+                ...commentData,
+                user: {
+                    connect: {
+                        id: userId
+                    }
+                },
+                post: {
+                    connect: {
+                        id: postId
+                    }
                 }
             }
-        }
-    });
-    console.log("Created Comment:", createdComment);
+        });
+        console.log("Created Comment:", createdComment);
 
-    return { 
-        createdComment: createdComment, 
-        parentComment: parentComment? parentComment : null
-    };
+        if(createdComment){
+            return { 
+                createdComment: createdComment, 
+                parentComment: parentComment? parentComment : null
+            };
+        }
+        throw "Comment couldn't be created.";
+    }
+    catch(error){
+        console.log(error);
+    }
 }
 
 const addCommentToPost = async (req, res) => {
     console.log("Req body:", req.body);
-    const comment = await createComment(req);
     
-    res.json({ data: comment });
+    try{
+        const comment = await createComment(req);
+        
+        if(comment){
+            return res.json({ data: comment });
+        }
+        throw "Comment couldn't be added to post.";
+    }
+    catch(error){
+        console.log(error);
+    }
 }
 
 const getPosts = async (req, res) => {
@@ -134,19 +159,27 @@ const getPosts = async (req, res) => {
         };
     }
 
-    const posts = await prisma.post.findMany({
-        ...queryFilters,
-        where: {
-            ...paramsFilters
-        },
-        include: {
-            categories: true,
-            comment: true
-        }
-    });
-    console.log("Posts:", posts);
+    try {
+        const posts = await prisma.post.findMany({
+            ...queryFilters,
+            where: {
+                ...paramsFilters
+            },
+            include: {
+                categories: true,
+                comment: true
+            }
+        });
+        console.log("Posts:", posts);
 
-    res.json({ data: posts });
+        if(posts){
+            return res.json({ data: posts });
+        }
+        throw "No posts were found.";
+    }
+    catch(error){
+        console.log(error);
+    }
 }
 
 module.exports = {

@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 
 const createUserBoilerPlate = async (req) => {
     const { username, email, password } = req.body;
+
     const user = {
         username: username,
         email: email,
@@ -31,19 +32,27 @@ const createUserWithProfile = async (req, res) => {
     const profile = await createProfileBoilerPlate(req);
     console.log("Created Profile Returned:", profile);
 
-    const createdUserWithProfile = await prisma.user.create({
-        data: {
-            ...user,
-            profile: {
-                create: {
-                    ...profile
+    try{
+        const createdUserWithProfile = await prisma.user.create({
+            data: {
+                ...user,
+                profile: {
+                    create: {
+                        ...profile
+                    }
                 }
             }
-        }
-    });
-    console.log("Created User with Profile:", createdUserWithProfile);
+        });
+        console.log("Created User with Profile:", createdUserWithProfile);
 
-    res.json({ data: createUserWithProfile });
+        if(createdUserWithProfile){
+            return res.json({ data: createUserWithProfile });
+        }
+        throw "User with profile couldn't be created.";
+    }
+    catch(error){
+        console.log(error);
+    }
 }
 
 module.exports = {

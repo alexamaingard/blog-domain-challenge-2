@@ -13,6 +13,7 @@ router.post("/comment", addCommentToPost);
 
 router.get("/", getPosts);
 // /post?order=recent v /post?order=old
+// &
 // /post?limit=100
 
 router.get("/userId=:id", getPosts);
