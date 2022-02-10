@@ -96,6 +96,7 @@ const addCommentToPost = async (req, res) => {
 
 const getPosts = async (req, res) => {
     console.log("Query:", req.query);
+    
     let queryFilters = {};
     if(req.query.limit){
         queryFilters = {
@@ -113,8 +114,35 @@ const getPosts = async (req, res) => {
         }
     }
 
-    const posts = await prisma.post.findMany({
+    console.log("Params:", req.params);
+    let paramsFilters = {};
+    if(req.params.userId){
+        paramsFilters = {
+            userId: parseInt(req.params.userId)
+        };
+    }
+    if(req.params.username){
+        const userFound = await prisma.user.findUnique({
+            where: {
+                username: req.params.username
+            }
+        });
+        console.log("User found:", userFound);
 
+        paramsFilters = {
+            userId: userFound.id
+        };
+    }
+
+    const posts = await prisma.post.findMany({
+        ...queryFilters,
+        where: {
+            ...paramsFilters
+        },
+        include: {
+            categories: true,
+            comment: true
+        }
     });
     console.log("Posts:", posts);
 

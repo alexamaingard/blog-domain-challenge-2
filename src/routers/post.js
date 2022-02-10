@@ -14,6 +14,8 @@ router.post("/comment", addCommentToPost);
 router.get("/", getPosts);
 // /post?order=recent v /post?order=old
 // /post?limit=100
-// /post?id=1 v post?username=blah
+
+router.get("/userId=:id", getPosts);
+router.get("/username=:username", getPosts);
 
 module.exports = router;
