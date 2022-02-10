@@ -55,17 +55,31 @@ const createUserWithProfile = async (req, res) => {
     }
 }
 
+const findUser = async (id) => {
+    try{
+        const userFound = await prisma.user.findUnique({
+            where: {
+                id: id
+            }
+        });
+
+        if(userFound){
+            return userFound;
+        }
+        throw "User not found.";
+    }
+    catch(error){
+        console.log(error);
+    }
+}
+
 const updateUser = async (req, res) => {
     console.log("Params:", req.params);
     const id = parseInt(req.params.id);
     const { username, email, password } = req.body;
 
     try{
-        const userToUpdate = await prisma.user.findUnique({
-            where: {
-                id: id
-            }
-        });
+        const userToUpdate = await findUser(id);
         console.log("User to update:", userToUpdate);
 
         const data = {
@@ -94,7 +108,55 @@ const updateUser = async (req, res) => {
     }
 }
 
+const updateProfile = async (req, res) => {
+    console.log("Id:", req.params);
+    const { firstName, lastName, age, pictureUrl } = req.body;
+    const id = parseInt(req.params.id);
+
+
+    try{
+        const userFound = await findUser(id);
+        console.log("User found:", userFound);
+
+        if(userFound){
+            const profileToUpdate = await prisma.profile.findUnique({
+                where: {
+                    userId: id
+                }
+            });
+            console.log("Profile found:", profileToUpdate);
+
+            if(profileToUpdate){
+                const profileToUpdateData = {
+                    firstName: firstName? firstName: profileToUpdate.firstName,
+                    lastName: lastName? lastName: profileToUpdate.lastName,
+                    age: age? age: profileToUpdate.age,
+                    pictureUrl: pictureUrl? pictureUrl: profileToUpdate.pictureUrl
+                }
+
+                const updatedProfile = await prisma.profile.update({
+                    where: {
+                        userId: id
+                    },
+                    data: {
+                        ...profileToUpdateData
+                    }
+                });
+                console.log("Updated Profile:", updatedProfile);
+
+                return res.json({ data: updatedProfile });
+            }
+            throw "Profile corresponding to user not found.";
+        }
+        throw "User corresponding to profile not found.";
+    }
+    catch(error){
+        console.log(error);
+    }
+}
+
 module.exports = {
     createUserWithProfile,
-    updateUser
+    updateUser,
+    updateProfile
 }
