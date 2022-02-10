@@ -55,6 +55,46 @@ const createUserWithProfile = async (req, res) => {
     }
 }
 
+const updateUser = async (req, res) => {
+    console.log("Params:", req.params);
+    const id = parseInt(req.params.id);
+    const { username, email, password } = req.body;
+
+    try{
+        const userToUpdate = await prisma.user.findUnique({
+            where: {
+                id: id
+            }
+        });
+        console.log("User to update:", userToUpdate);
+
+        const data = {
+            username: username? username: userToUpdate.username,
+            password: password? password: userToUpdate.password,
+            email: email? email: userToUpdate.email
+        };
+
+        if(userToUpdate){
+            const updatedUser = await prisma.user.update({
+                where: {
+                    id: id
+                },
+                data: {
+                    ...data
+                }
+            });
+            console.log("Updated user:", updatedUser);
+
+            return res.json({ data: updatedUser });
+        }
+        throw "User not found.";
+    }
+    catch(error){
+        console.log(error);
+    }
+}
+
 module.exports = {
-    createUserWithProfile
+    createUserWithProfile,
+    updateUser
 }
