@@ -2,15 +2,26 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 const createPost = async (req, res) => {
-    console.log("Req body", req.body);
+    //console.log("Req body", req.body);
     const { title, content, imageUrl, publishedAt, userId, categories } = req.body;
+
+    let data = {
+        title: title,
+        content: content,
+        imageUrl: imageUrl
+    }
+
+    if(publishedAt){
+        data = {
+            ...data, 
+            publishedAt: publishedAt
+        };
+    }
 
     try {
         const createdPost = await prisma.post.create({
             data: {
-                title: title,
-                content: content,
-                imageUrl: imageUrl,
+                ...data,
                 user: {
                     connect: {
                         id: userId
@@ -104,7 +115,7 @@ const createComment = async (req) => {
 }
 
 const addCommentToPost = async (req, res) => {
-    console.log("Req body:", req.body);
+    //console.log("Req body:", req.body);
     
     try{
         const comment = await createComment(req);
@@ -120,7 +131,7 @@ const addCommentToPost = async (req, res) => {
 }
 
 const getPosts = async (req, res) => {
-    console.log("Query:", req.query);
+    //console.log("Query:", req.query);
     
     let queryFilters = {};
     if(req.query.limit){
@@ -139,7 +150,7 @@ const getPosts = async (req, res) => {
         }
     }
 
-    console.log("Params:", req.params);
+    //console.log("Params:", req.params);
     let paramsFilters = {};
     if(req.params.userId){
         paramsFilters = {
@@ -183,11 +194,106 @@ const getPosts = async (req, res) => {
 }
 
 const updatePost = async (req, res) => {
+    //console.log("Post id:", req.params.id);
+    const { title, content, imageUrl } = req.body;
+    const updatedCategoriesList = req.body.categories;
+    const id = parseInt(req.params.id);
 
+    const updateConditions = {
+        where: {
+            id: id
+        }
+    };
+
+    const postToUpdate = await prisma.post.findUnique({
+        ...updateConditions,
+        include: {
+            categories: true
+        }
+    });
+    console.log("Post to update:", postToUpdate);
+    //console.log("Post categories:", postToUpdate.categories);
+
+    let data = {
+        title: title? title: postToUpdate.title,
+        content: content? content: postToUpdate.content,
+        imageUrl: imageUrl? imageUrl: postToUpdate.imageUrl
+    }
+
+    if(postToUpdate){
+        const categoriesToConnect = [];
+        const categoriesToDisconnect = [];
+        for(let i = 0; i < postToUpdate.categories.length; i++){
+            const categoryFound = await prisma.category.findUnique({
+                where: {
+                    id: postToUpdate.categories[i].categoryId
+                }
+            });
+            console.log("Category found:", categoryFound);
+    
+            if(categoryFound){
+                if(!updatedCategoriesList.includes(categoryFound.id)){
+                    categoriesToDisconnect.push(categoryFound.id);
+                }
+            }
+            else{
+                categoriesToConnect.push()
+            }
+        }
+        console.log("New categories to connect:", categoriesToConnect);
+        console.log("Categories to disconnect:", categoriesToDisconnect);
+
+        const connectedCategories = [];
+
+        for(let i = 0; i < categoriesToConnect.length; i++){
+            const connectedCategory = {
+                id: categoriesToConnect[i]
+            };
+
+            connectedCategories.push(connectedCategory);
+        }
+        console.log("Connected:", connectedCategories);
+
+        const disconnectedCategories = [];
+        for(let i = 0; i < categoriesToDisconnect.length; i++){
+            const disconnectedCategory = {
+                id: categoriesToDisconnect[i]
+            };
+
+            connectedCategories.push(disconnectedCategory);
+        }
+        console.log("Disconnected:", disconnectedCategories);
+
+        try{
+            const updatedPost = await prisma.post.update({
+                ...updateConditions,
+                data: {
+                    ...data,
+                    categories: {
+                        disconnect: [
+                            ...disconnectedCategories
+                        ],
+                        connect: [
+                            ...connectedCategories
+                        ] 
+                    }
+                }
+            });
+            console.log("Updated post:", updatedPost);
+
+            if(updatedPost){
+                return res.json({ data: updatedPost });
+            }
+            throw "Post couldn't be updated.";
+        }
+        catch(error){
+            console.log(error);
+        }
+    }
 }
 
 const updateComment = async (req, res) => {
-    console.log("Comment id:", req.params.id);
+    //console.log("Comment id:", req.params.id);
     const { content } = req.body;
     const id = parseInt(req.params.id);
 
@@ -224,7 +330,7 @@ const updateComment = async (req, res) => {
 }
 
 const updateCategory = async (req, res) => {
-    console.log("Category id:", req.params.id);
+    //console.log("Category id:", req.params.id);
     const { name } = req.body;
     const id = parseInt(req.params.id);
     const updateConditions = {

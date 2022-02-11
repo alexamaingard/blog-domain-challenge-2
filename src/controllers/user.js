@@ -26,7 +26,7 @@ const createProfileBoilerPlate = async (req) => {
 }
 
 const createUserWithProfile = async (req, res) => {
-    console.log("Req body:", req.body);
+    //console.log("Req body:", req.body);
     const user = await createUserBoilerPlate(req);
     console.log("Created User Returned:", user);
     const profile = await createProfileBoilerPlate(req);
@@ -74,7 +74,7 @@ const findUser = async (id) => {
 }
 
 const updateUser = async (req, res) => {
-    console.log("Params:", req.params);
+    //console.log("Params:", req.params);
     const id = parseInt(req.params.id);
     const { username, email, password } = req.body;
 
@@ -109,7 +109,7 @@ const updateUser = async (req, res) => {
 }
 
 const updateProfile = async (req, res) => {
-    console.log("Id:", req.params);
+    //console.log("Id:", req.params);
     const { firstName, lastName, age, pictureUrl } = req.body;
     const id = parseInt(req.params.id);
 
