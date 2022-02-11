@@ -235,6 +235,7 @@ const updatePost = async (req, res) => {
                 data: {
                     ...data,
                     categories: {
+                        disconnect: true,
                         connect: [
                             ...connectedCategories
                         ] 
@@ -330,11 +331,89 @@ const updateCategory = async (req, res) => {
     }
 }
 
+const deleteSingleComment = async (id) => {
+    const deleteComment = await prisma.comment.delete({
+        where: {
+            id: id
+        }
+    });
+}
+
+const deletePost = async (req, res) => {
+    const id = parseInt(req.params.id);
+
+    const postDeleteConditions = {
+        where: {
+            id: id
+        }
+    }
+
+    const postToDelete = await prisma.post.findUnique({
+        ...postDeleteConditions
+    });
+    console.log("Post to delete:", postToDelete);
+
+    if(postToDelete){    
+        const commentsRelatedToPost = await prisma.comment.findMany({
+            where: {
+                postId: id
+            }
+        });
+        console.log("Comments related to post:", commentsRelatedToPost);
+    
+        if(commentsRelatedToPost){
+            try{
+                for(let i = 0; i < commentsRelatedToPost.length; i++){
+                    const deletedComment = await deleteSingleComment(commentsRelatedToPost[i].id);
+                    
+                    if(!deletedComment){
+                        throw "Comment couldn't be deleted";
+                    }
+                }
+            }
+            catch(error){
+                console.log(error);
+            }
+        }
+
+        try{
+            await prisma.categoriesOnPosts.deleteMany({
+                where: {
+                    postId: id
+                }
+            });
+        }
+        catch(error){
+            console.log(error);
+        }
+
+        try{
+            const deletedPost = await prisma.post.delete({
+                ...postDeleteConditions
+            });
+
+            if(deletedPost){
+                return res.json({ data: deletedPost });
+            }
+            throw "Post couldn't be deleted.";
+        }
+        catch(error){
+            console.log(error);
+        }
+    }
+}
+
+const deleteComment = async (req, res) => {
+    const id = parseInt(req.params.id);
+}
+
 module.exports = {
     createPost,
     addCommentToPost,
     getPosts,
     updatePost,
     updateComment,
-    updateCategory
+    updateCategory,
+    deletePost,
+    deleteComment
 }

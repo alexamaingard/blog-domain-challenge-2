@@ -6,7 +6,9 @@ const {
     getPosts,
     updatePost,
     updateComment,
-    updateCategory
+    updateCategory,
+    deletePost,
+    deleteComment
 } = require('../controllers/post');
 
 const router = express.Router();
@@ -25,5 +27,8 @@ router.get("/username=:username", getPosts);
 router.patch("/:id", updatePost);
 router.patch("/comment/:id", updateComment);
 router.patch("/category/:id", updateCategory);
+
+router.delete("/delete/:id", deletePost);
+router.delete("/delete/comment/:id", deleteComment);
 
 module.exports = router;
