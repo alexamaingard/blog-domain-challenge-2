@@ -206,10 +206,7 @@ const updatePost = async (req, res) => {
     };
 
     const postToUpdate = await prisma.post.findUnique({
-        ...updateConditions,
-        include: {
-            categories: true
-        }
+        ...updateConditions
     });
     console.log("Post to update:", postToUpdate);
     //console.log("Post categories:", postToUpdate.categories);
@@ -221,48 +218,16 @@ const updatePost = async (req, res) => {
     }
 
     if(postToUpdate){
-        const categoriesToConnect = [];
-        const categoriesToDisconnect = [];
-        for(let i = 0; i < postToUpdate.categories.length; i++){
-            const categoryFound = await prisma.category.findUnique({
-                where: {
-                    id: postToUpdate.categories[i].categoryId
-                }
-            });
-            console.log("Category found:", categoryFound);
-    
-            if(categoryFound){
-                if(!updatedCategoriesList.includes(categoryFound.id)){
-                    categoriesToDisconnect.push(categoryFound.id);
-                }
-            }
-            else{
-                categoriesToConnect.push()
-            }
-        }
-        console.log("New categories to connect:", categoriesToConnect);
-        console.log("Categories to disconnect:", categoriesToDisconnect);
-
         const connectedCategories = [];
 
-        for(let i = 0; i < categoriesToConnect.length; i++){
+        for(let i = 0; i < updatedCategoriesList.length; i++){
             const connectedCategory = {
-                id: categoriesToConnect[i]
+                id: updatedCategoriesList[i]
             };
 
             connectedCategories.push(connectedCategory);
         }
         console.log("Connected:", connectedCategories);
-
-        const disconnectedCategories = [];
-        for(let i = 0; i < categoriesToDisconnect.length; i++){
-            const disconnectedCategory = {
-                id: categoriesToDisconnect[i]
-            };
-
-            connectedCategories.push(disconnectedCategory);
-        }
-        console.log("Disconnected:", disconnectedCategories);
 
         try{
             const updatedPost = await prisma.post.update({
@@ -270,13 +235,13 @@ const updatePost = async (req, res) => {
                 data: {
                     ...data,
                     categories: {
-                        disconnect: [
-                            ...disconnectedCategories
-                        ],
                         connect: [
                             ...connectedCategories
                         ] 
                     }
+                },
+                include: {
+                    categories: true
                 }
             });
             console.log("Updated post:", updatedPost);
