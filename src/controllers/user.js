@@ -155,8 +155,60 @@ const updateProfile = async (req, res) => {
     }
 }
 
+const deleteUser = async (req, res) => {
+    const id = parseInt(req.params.id);
+
+    const deleteUserConditions = {
+        where: {
+            id: id
+        }   
+    }
+
+    const userToDelete = await prisma.user.findUnique({
+        ...deleteUserConditions
+    });
+    console.log("User to delete:", userToDelete);
+
+    if(userToDelete){
+        const postsRelatedToUser = await prisma.post.findMany({
+            where: {
+                userId: id
+            }
+        });
+        console.log("Posts related to user:", postsRelatedToUser);
+
+        if(postsRelatedToUser){
+            try{
+                const deletedPosts = await prisma.post.deleteMany({
+                    where: {
+                        userId: id
+                    }
+                });
+
+                if(!deletedPosts){
+                    throw "Posts related to user couldn't be deleted.";
+                }
+            }
+            catch(error){
+                console.log(error);
+            }
+        }
+
+        const commentsRelatedToUser = await prisma.comment.findMany({
+            where: {
+                userId: id
+            }
+        });
+        console.log("Comments related to user:", commentsRelatedToUser);
+
+        
+
+    }
+}
+
 module.exports = {
     createUserWithProfile,
     updateUser,
-    updateProfile
+    updateProfile,
+    deleteUser
 }
